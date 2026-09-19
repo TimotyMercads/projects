@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AlignMate</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+    <!-- TensorFlow.js Pose Detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- HEADER -->
+        <header>
+            <div class="logo-area">
+                <div class="logo">AM</div>
+
+                <div>
+                    <h1>AlignMate</h1>
+                    <p>Study Posture Assistant</p>
+                </div>
+            </div>
+
+            <div class="ai-status">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="modelStatus">Model not loaded</span>
+            </div>
+        </header>
+
+
+        <!-- MAIN CONTENT -->
+        <main>
+
+            <!-- CAMERA SECTION -->
+            <section class="camera-section">
+
+                <div class="section-header">
+                    <div>
+                        <h2>Posture Monitor</h2>
+                        <p>Position your upper body in front of the camera.</p>
+                    </div>
+                </div>
+
+                <div class="camera-container">
+
+                    <video id="video"
+                           autoplay
+                           playsinline
+                           muted>
+                    </video>
+
+                    <canvas id="canvas"></canvas>
+
+                    <!-- Loading message -->
+                    <div id="loadingMessage" class="camera-message">
+                        <div class="loader"></div>
+                        <p>Loading AI model...</p>
+                    </div>
+
+                    <!-- Camera not started -->
+                    <div id="startMessage" class="camera-message hidden">
+                        <div class="camera-icon">📷</div>
+                        <p>Camera is ready</p>
+                        <small>Click "Start Camera" below</small>
+                    </div>
+
+                </div>
+
+
+                <!-- CAMERA CONTROLS -->
+                <div class="controls">
+
+                    <button id="startButton" class="primary-button">
+                        ▶ Start Camera
+                    </button>
+
+                    <button id="stopButton"
+                            class="secondary-button"
+                            disabled>
+                        ■ Stop Camera
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- RIGHT SIDE / ANALYSIS -->
+            <section class="analysis-section">
+
+                <!-- POSTURE STATUS -->
+                <div class="card posture-card">
+
+                    <div class="card-title">
+                        <span>Current Posture</span>
+                        <span id="postureEmoji">⏳</span>
+                    </div>
+
+                    <div id="postureStatus"
+                         class="posture-status neutral">
+                        Waiting
+                    </div>
+
+                    <p id="postureDescription">
+                        Start the camera to begin posture analysis.
+                    </p>
+
+                </div>
+
+
+                <!-- SCORE -->
+                <div class="card score-card">
+
+                    <div class="card-title">
+                        <span>Posture Score</span>
+                        <span>📊</span>
+                    </div>
+
+                    <div class="score-container">
+
+                        <div id="scoreValue"
+                             class="score-value">
+                            --
+                        </div>
+
+                        <div class="score-label">
+                            / 100
+                        </div>
+
+                    </div>
+
+                    <div class="progress-bar">
+                        <div id="scoreProgress"
+                             class="progress-fill">
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- AI RECOMMENDATION -->
+                <div class="card recommendation-card">
+
+                    <div class="card-title">
+                        <span>AI Recommendation</span>
+                        <span>💡</span>
+                    </div>
+
+                    <p id="recommendation">
+                        Your recommendation will appear here once the AI detects your posture.
+                    </p>
+
+                </div>
+
+
+                <!-- DETECTION INFO -->
+                <div class="card detection-card">
+
+                    <div class="card-title">
+                        <span>Detection</span>
+                        <span>🦴</span>
+                    </div>
+
+                    <div class="detection-row">
+                        <span>Person detected</span>
+                        <strong id="personDetected">
+                            No
+                        </strong>
+                    </div>
+
+                    <div class="detection-row">
+                        <span>Confidence</span>
+                        <strong id="confidence">
+                            --
+                        </strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+        <!-- STUDY TIMER -->
+        <section class="timer-section">
+
+            <div>
+                <h2>Study Session</h2>
+                <p>Keep track of your study time.</p>
+            </div>
+
+            <div id="timer"
+                 class="timer">
+                00:00:00
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer>
+            <p>
+                AlignMate • MoveNet Trained Model
+            </p>
+
+            <p>
+                For educational purposes only. This system is not a medical diagnostic tool.
+            </p>
+        </footer>
+
+    </div>
+
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+
+</body>
+</html>
