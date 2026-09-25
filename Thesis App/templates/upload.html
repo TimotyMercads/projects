@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Upload Dataset{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Upload Dataset</h1>
+
+<div class="upload-box">
+    <h2>Upload CSV or XLSX Dataset</h2>
+    <p>Select a student performance file matching the AURA dataset schema.</p>
+
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('upload') }}">
+        <label class="upload-btn" for="dataset">Choose File</label>
+        <input type="file" id="dataset" name="dataset" accept=".csv,.xlsx,.xls" required>
+        <div class="mt-30">
+            <button class="btn" type="submit">Upload Dataset</button>
+        </div>
+    </form>
+</div>
+
+<div class="graph-box mt-30">
+    <h3>Uploaded Files</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Type</th>
+                <th>Records</th>
+                <th>Uploaded By</th>
+                <th>Uploaded</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if history %}
+            {% for h in history %}
+            <tr>
+                <td>{{ h.filename }}</td>
+                <td><span class="file-type-badge">{{ h.file_type }}</span></td>
+                <td>{{ "{:,}".format(h.row_count) }}</td>
+                <td>{{ h.uploaded_by_name or "Unknown" }}</td>
+                <td>{{ h.uploaded_at.strftime('%b %d, %Y %I:%M %p') if h.uploaded_at else "—" }}</td>
+                <td>
+                    {% if h.is_active %}
+                        <span class="badge badge-success">Active</span>
+                    {% else %}
+                        <span class="badge badge-warning">Replaced</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="6">No uploads yet.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="graph-box mt-30">
+    <div class="card-header-row">
+        <h3>Download Dataset</h3>
+    </div>
+    <p class="text-muted mb-20">
+        Export the currently loaded (cleaned) dataset, optionally enriched with
+        computed columns (Overall Average, LMS Activity Level, and live AI
+        predictions if a model is loaded).
+    </p>
+    {% if has_dataset %}
+    <a href="{{ url_for('download_dataset') }}" class="btn">Download Cleaned Dataset (CSV)</a>
+    <a href="{{ url_for('download_dataset_enriched') }}" class="btn">Download Enriched Dataset (CSV)</a>
+    {% else %}
+    <p class="text-muted">Upload a dataset first to enable downloads.</p>
+    {% endif %}
+</div>
+
+{% if clean_report %}
+<div class="graph-box mt-30">
+    <h3>Last Cleaning Report</h3>
+    <p class="text-muted mb-20">
+        {{ clean_report.filename }} — cleaned {{ clean_report.cleaned_at }} —
+        {{ "{:,}".format(clean_report.original_rows) }} rows in,
+        {{ "{:,}".format(clean_report.final_rows) }} rows out.
+    </p>
+    <ul class="model-file-list">
+        <li>Empty rows removed: <strong>{{ clean_report.empty_rows_removed }}</strong></li>
+        <li>Exact duplicate rows removed: <strong>{{ clean_report.duplicate_rows_removed }}</strong></li>
+        <li>Duplicate Student IDs removed (kept first): <strong>{{ clean_report.duplicate_ids_removed }}</strong></li>
+        {% if clean_report.columns_trimmed %}
+        <li>Whitespace trimmed in: <strong>{{ clean_report.columns_trimmed | join(", ") }}</strong></li>
+        {% endif %}
+        {% if clean_report.categorical_values_normalized %}
+        <li>Text casing normalized in: <strong>{{ clean_report.categorical_values_normalized | join(", ") }}</strong></li>
+        {% endif %}
+        {% if clean_report.numeric_values_coerced %}
+        <li>Invalid numeric entries cleared:
+            {% for col, count in clean_report.numeric_values_coerced.items() %}
+                <strong>{{ col }}</strong> ({{ count }}){{ ", " if not loop.last }}
+            {% endfor %}
+        </li>
+        {% endif %}
+        {% if clean_report.values_clipped %}
+        <li>Out-of-range values clipped:
+            {% for col, count in clean_report.values_clipped.items() %}
+                <strong>{{ col }}</strong> ({{ count }}){{ ", " if not loop.last }}
+            {% endfor %}
+        </li>
+        {% endif %}
+        {% if clean_report.values_imputed %}
+        <li>Missing values filled in:
+            {% for col, info in clean_report.values_imputed.items() %}
+                <strong>{{ col }}</strong> ({{ info.count }} filled with {{ info.method }}: {{ info.value }}){{ ", " if not loop.last }}
+            {% endfor %}
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="graph-box mt-30">
+    <h3>Model Files</h3>
+    <p>
+        Drop these files into the <code>/models</code> folder to enable live AI predictions
+        (produced by the training notebook's "Save Everything" step):
+    </p>
+    <ul class="model-file-list">
+        <li>Best_Model.pkl {% if model_files_present.model %}✅{% else %}❌{% endif %}</li>
+        <li>Scaler.pkl {% if model_files_present.scaler %}✅{% else %}❌{% endif %}</li>
+        <li>TargetEncoder.pkl {% if model_files_present.target_encoder %}✅{% else %}❌{% endif %}</li>
+        <li>Categorical_Encoders.pkl {% if model_files_present.encoders %}✅{% else %}❌{% endif %}</li>
+        <li>KMeans.pkl (optional, only if the winning model was a KMeans hybrid) {% if model_files_present.kmeans %}✅{% else %}—{% endif %}</li>
+        <li>Best_RandomForest.pkl (optional automatic fallback) {% if model_files_present.model_fallback %}✅{% else %}—{% endif %}</li>
+    </ul>
+
+    {% if schema_status %}
+    <div class="mt-30">
+        <h4 class="mb-20">Schema Compatibility</h4>
+        {% for filename, info in schema_status.models.items() %}
+            {% if info.present %}
+                <p>
+                    <strong>{{ filename }}</strong> —
+                    {% if info.matches_current_schema %}
+                        <span class="text-success">✅ compatible with the current Scaler/Categorical_Encoders.</span>
+                    {% else %}
+                        <span class="text-warning">⚠️ does NOT match the current Scaler/Categorical_Encoders — this model was likely trained on a different column schema and will not be used for predictions.</span>
+                    {% endif %}
+                </p>
+            {% endif %}
+        {% endfor %}
+        <p class="text-muted mt-20">
+            When Best_Model.pkl doesn't match, the app automatically falls back to
+            Best_RandomForest.pkl (if it's compatible) for live predictions.
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,15 @@
+Flask>=3.0
+Flask-Login>=0.6
+pandas>=2.2.3
+numpy>=1.26,<3
+scikit-learn>=1.5
+xgboost>=2.1
+joblib>=1.4
+openpyxl>=3.1
+shap>=0.46
+SQLAlchemy>=2.0
+PyMySQL>=1.1
+psycopg2-binary>=2.9
+cryptography>=42.0
+python-dotenv>=1.0
+gunicorn>=22.0

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Student Insights{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('students') }}" class="back-link">← Back to Students</a>
+
+
+<div class="summary-strip">
+    <div>
+        <h2>Student: {{ student.id }}</h2>
+    </div>
+    <div class="stats">
+        <span class="stat-item">GPA: <strong>{{ student.average if student.average is not none else "—" }}</strong></span>
+        <span class="stat-item">Attendance: <strong>{{ student.attendance if student.attendance is not none else "—" }}{{ "%" if student.attendance is not none }}</strong></span>
+        <span class="stat-item">LMS Activity: <strong>{{ student.lms_activity }}</strong></span>
+    </div>
+    <a href="{{ url_for('student_edit', student_id=student.id) }}" class="btn-pill btn-pill-secondary">✏️ Edit</a>
+    <a href="{{ url_for('student_explanation', student_id=student.id) }}" class="btn-pill">Explanation</a>
+</div>
+
+<div class="prediction-banner">
+    Prediction:
+    {% if display_label == "At Risk" %}
+        <span class="label-at-risk">AT-RISK</span>
+    {% else %}
+        <span class="label-high">HIGH PERFORMING</span>
+    {% endif %}
+    {% if prediction and prediction.error %}
+        <span class="text-warning"> (model note: {{ prediction.error }})</span>
+    {% elif not prediction %}
+        <span class="text-muted"> (based on dataset label — connect a model for a live prediction)</span>
+    {% endif %}
+</div>
+
+<div class="insight-card">
+    <h3 class="mb-20">Key Factors</h3>
+    {% if explanation %}
+        <div class="progress-item">
+            <label>🔴 GPA</label>
+            <div class="progress-bar">
+                <div class="progress red" style="width:{{ explanation.groups['GPA'] }}%;"></div>
+            </div>
+        </div>
+        <div class="progress-item">
+            <label>🟡 Attendance</label>
+            <div class="progress-bar">
+                <div class="progress yellow" style="width:{{ explanation.groups['Attendance'] }}%;"></div>
+            </div>
+        </div>
+        <div class="progress-item">
+            <label>🟣 LMS Engagement</label>
+            <div class="progress-bar">
+                <div class="progress purple" style="width:{{ explanation.groups['LMS Engagement'] }}%;"></div>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-muted">
+            Key factor weighting needs a compatible trained model loaded in <code>/models</code>.
+            Showing a simple comparison against class averages instead.
+        </p>
+        <div class="progress-item">
+            <label>🔴 GPA</label>
+            <div class="progress-bar">
+                <div class="progress red" style="width:{{ student.average if student.average is not none else 50 }}%;"></div>
+            </div>
+        </div>
+        <div class="progress-item">
+            <label>🟡 Attendance</label>
+            <div class="progress-bar">
+                <div class="progress yellow" style="width:{{ student.attendance if student.attendance is not none else 50 }}%;"></div>
+            </div>
+        </div>
+        <div class="progress-item">
+            <label>🟣 LMS Engagement</label>
+            <div class="progress-bar">
+                <div class="progress purple" style="width:{{ 60 if student.lms_activity == 'High' else (35 if student.lms_activity == 'Medium' else 15) }}%;"></div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="insight-card">
+    <div class="card-header-row">
+        <h3>Recommended Actions</h3>
+        <a href="{{ url_for('student_recommendations', student_id=student.id) }}" class="btn-pill">More</a>
+    </div>
+
+    {% if stage_info %}
+    <p class="text-muted mb-20">
+        Closest matching stage: <span class="stage-badge">Stage {{ stage_info.number }}</span>
+        — {{ stage_info.trigger }}
+    </p>
+    <ul class="model-file-list">
+        {% for step in stage_info.steps[:3] %}
+        <li>✅ {{ step.title }} — {{ step.detail }}</li>
+        {% endfor %}
+    </ul>
+    <p class="policy-note">Based on AUF's Early Intervention and Academic Support Policy.</p>
+    {% elif display_label == "At Risk" %}
+    <p class="text-muted">
+        This student is At Risk, but doesn't clearly match a specific policy stage from the
+        data available. Click More to review the full policy.
+    </p>
+    {% else %}
+    <ul class="model-file-list">
+        <li>✅ Offer Enrichment Activities</li>
+        <li>✅ Recommend Peer Mentoring Role</li>
+        <li>✅ Recognize Achievement</li>
+    </ul>
+    <p class="policy-note">General suggestion, not part of the formal at-risk policy.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

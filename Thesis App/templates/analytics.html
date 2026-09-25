@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Analytics Dashboard</h1>
+
+<div class="cards">
+    <div class="card">
+        <h4>📊 Average Grade</h4>
+        <h2>{{ charts.avg_grade if charts and charts.avg_grade is not none else "—" }}{{ "%" if charts and charts.avg_grade is not none }}</h2>
+    </div>
+    <div class="card green">
+        <h4>🗓️ Attendance Rate</h4>
+        <h2>{{ charts.avg_attendance if charts and charts.avg_attendance is not none else "—" }}{{ "%" if charts and charts.avg_attendance is not none }}</h2>
+    </div>
+    <div class="card red">
+        <h4>⚠️ Students At Risk</h4>
+        <h2>{{ charts.at_risk_count if charts else "—" }}</h2>
+    </div>
+</div>
+
+<div class="analytics-grid">
+    <div class="graph-box">
+        <h3>Student Performance Distribution</h3>
+        {% if charts and charts.performance_counts %}
+            <div class="chart-wrap">
+                <canvas id="perfDist"></canvas>
+            </div>
+        {% else %}
+            <div class="chart-placeholder">Upload a labeled dataset to see this chart</div>
+        {% endif %}
+    </div>
+
+    <div class="summary-card">
+        <h3>AI Summary</h3>
+        {% if charts and charts.ai_summary %}
+            {% for line in charts.ai_summary %}
+            <p class="mb-10">• {{ line }}</p>
+            {% endfor %}
+        {% else %}
+            <p>Upload a dataset to generate an automated summary.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="charts-grid-2 mb-20">
+    <div class="graph-box">
+        <h3>Attendance by Year Level</h3>
+        {% if charts and charts.attendance_by_year %}
+            <div class="chart-wrap chart-wrap-sm">
+                <canvas id="attendanceByYear"></canvas>
+            </div>
+        {% else %}
+            <div class="chart-placeholder">Upload a dataset to see this chart</div>
+        {% endif %}
+    </div>
+
+    <div class="graph-box">
+        <h3>Academic Component Breakdown</h3>
+        {% if charts and charts.component_breakdown %}
+            <div class="chart-wrap chart-wrap-sm">
+                <canvas id="componentBreakdown"></canvas>
+            </div>
+        {% else %}
+            <div class="chart-placeholder">Upload a dataset to see this chart</div>
+        {% endif %}
+    </div>
+</div>
+
+{% if top_features %}
+<div class="graph-box">
+    <h3>Top Predictors (from trained model)</h3>
+    <div class="chart-wrap">
+        <canvas id="topFeatures"></canvas>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if charts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#93A1BC';
+Chart.defaults.font.family = "'Poppins', sans-serif";
+
+{% if charts.performance_counts %}
+new Chart(document.getElementById('perfDist'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ charts.performance_counts.keys() | list | tojson }},
+        datasets: [{
+            data: {{ charts.performance_counts.values() | list | tojson }},
+            backgroundColor: ['#57B27F', '#9C3A56', '#D4A73D'],
+            borderColor: '#1B3358',
+            borderWidth: 2
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } } }
+    }
+});
+{% endif %}
+
+{% if charts.attendance_by_year %}
+new Chart(document.getElementById('attendanceByYear'), {
+    type: 'bar',
+    data: {
+        labels: {{ charts.attendance_by_year.keys() | list | tojson }},
+        datasets: [{
+            label: 'Attendance Rate (%)',
+            data: {{ charts.attendance_by_year.values() | list | tojson }},
+            backgroundColor: '#3E6FA8',
+            borderRadius: 6,
+            maxBarThickness: 46
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { grid: { color: 'rgba(255,255,255,.06)' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+{% endif %}
+
+{% if charts.component_breakdown %}
+new Chart(document.getElementById('componentBreakdown'), {
+    type: 'pie',
+    data: {
+        labels: {{ charts.component_breakdown.keys() | list | tojson }},
+        datasets: [{
+            data: {{ charts.component_breakdown.values() | list | tojson }},
+            backgroundColor: ['#D4A73D', '#57B27F', '#3E6FA8', '#9C3A56'],
+            borderColor: '#1B3358',
+            borderWidth: 2
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } } }
+    }
+});
+{% endif %}
+</script>
+{% endif %}
+
+{% if top_features %}
+<script>
+new Chart(document.getElementById('topFeatures'), {
+    type: 'bar',
+    data: {
+        labels: {{ top_features | map(attribute=0) | list | tojson }},
+        datasets: [{
+            label: 'Importance',
+            data: {{ top_features | map(attribute=1) | list | tojson }},
+            backgroundColor: '#D4A73D',
+            borderRadius: 6
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,.06)' } },
+            y: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
