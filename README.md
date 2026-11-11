@@ -34,6 +34,11 @@ Implementation and evaluation of a supervised ML model with explainability featu
 Tracks which band instruments are available for rent vs. currently rented, including rental duration and due dates. Backend developer on a small team.
 **Tech:** Backend development (team project)
 
+### [TLC-Haircut-Advisor](./TLC-Haircut-Advisor)
+**Face-shape haircut advisor web app (client project: TLC Barbershop)**
+Mobile-first web app that finds your face shape from your camera using MediaPipe Face Landmarker, entirely in the browser (no uploads, no backend), then suggests suited haircuts and previews them on your face. Group project (PTF50, Angeles University Foundation).
+**Tech:** HTML, CSS, JavaScript, MediaPipe Face Landmarker, Vercel
+
 ### AlignMate *(coming soon)*
 **Computer-vision posture corrector**
 Uses a pre-trained machine learning model with live webcam input to detect and correct poor posture while sitting or standing.

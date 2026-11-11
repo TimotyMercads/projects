@@ -1,0 +1,958 @@
+/* =============================================================
+   TLC Barbershop: Face-Shape Haircut Advisor  |  styles.css
+   -------------------------------------------------------------
+   HOW THIS FILE IS ORGANIZED
+   1. Design tokens (colors, fonts, spacing) in :root
+   2. Base / reset
+   3. Layout: header, screens, containers
+   4. Components: buttons, cards, notices, camera, results, etc.
+   5. Overlays: loading + error box
+   6. Accessibility helpers + reduced motion
+   7. Larger screens (tablet / desktop), MOBILE-FIRST so these come last
+
+   PALETTE RULE: every color comes from the TLC logo (black, gold,
+   white) or a tint/shade of it. Contrast was checked against WCAG AA:
+   - TLC gold is NEVER used as text on cream/white (only 2.7:1).
+     Use --gold-deep for gold-colored text on light backgrounds.
+   ============================================================= */
+
+/* ---------- 1. DESIGN TOKENS ---------- */
+:root {
+  /* Colors from the logo */
+  --black: #0B0A09;        /* Barber black: main dark background */
+  --charcoal: #1C1915;     /* Cards on dark backgrounds */
+  --bronze-line: #3A332B;  /* Decorative borders on dark (not for text) */
+  --gold: #C98A35;         /* TLC gold: exact logo gold */
+  --gold-light: #E2B677;   /* Hover on dark, focus ring */
+  --gold-deep: #8A5A1C;    /* Gold text on light backgrounds (5.3:1 on cream) */
+  --cream: #F8F3EA;        /* Light screen background */
+  --white: #FFFFFF;
+  --muted-on-dark: #B9B0A5;  /* Secondary text on black (9.3:1) */
+  --muted-on-light: #5E554B; /* Secondary text on cream (6.6:1) */
+
+  /* Fonts, with safe fallbacks if Google Fonts don't load */
+  --font-heading: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* Spacing scale (multiples of 8px) */
+  --s-1: 0.25rem; /* 4px  */
+  --s-2: 0.5rem;  /* 8px  */
+  --s-3: 0.75rem; /* 12px */
+  --s-4: 1rem;    /* 16px */
+  --s-5: 1.5rem;  /* 24px */
+  --s-6: 2rem;    /* 32px */
+  --s-7: 3rem;    /* 48px */
+
+  /* Corners: 8px on controls, 12px on cards, used everywhere */
+  --radius: 8px;
+  --radius-card: 12px;
+
+  /* Subtle shadow, used on light screens only */
+  --shadow: 0 1px 2px rgba(11, 10, 9, 0.06), 0 4px 16px rgba(11, 10, 9, 0.08);
+
+  /* Restrained animation */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fast: 160ms;
+
+  --header-h: 65px;     /* 64px + the 1px header border */
+  --tabbar-h: 64px;      /* height of the bottom tab bar on phones */
+  --tabbar-total: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); /* + iPhone home bar */
+}
+
+/* ---------- 2. BASE / RESET ---------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;          /* 16px: readable on phones, prevents iOS zoom on inputs */
+  line-height: 1.6;
+  color: var(--white);
+  background: var(--black);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+/* IMPORTANT: makes the HTML "hidden" attribute always win. Without this, any
+   element that has its own "display" rule (like the landing screen) would stay
+   visible even when app.js hides it. */
+[hidden] { display: none !important; }
+
+h1, h2, h3 { line-height: 1.2; margin: 0 0 var(--s-3); }
+p { margin: 0 0 var(--s-4); }
+
+a { color: inherit; }
+
+/* Visible focus ring for keyboard users on every interactive element */
+:focus-visible {
+  outline: 3px solid var(--gold-light);
+  outline-offset: 2px;
+}
+.screen--light :focus-visible { outline-color: var(--gold-deep); }
+
+/* ---------- 3. LAYOUT ---------- */
+
+/* Header bar with logo + navigation */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: var(--header-h);
+  padding: var(--s-2) var(--s-4);
+  padding-top: max(var(--s-2), env(safe-area-inset-top)); /* iPhone notch */
+  background: var(--black);
+  border-bottom: 1px solid var(--bronze-line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1);
+  background: none;
+  border: 0;
+  color: var(--white);
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius);
+}
+.brand img { width: 40px; height: 40px; }
+.brand__text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand__name { font-family: var(--font-heading); font-weight: 700; color: var(--gold); font-size: 1rem; }
+.brand__sub { font-size: 0.75rem; color: var(--muted-on-dark); letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Top navigation: hidden on phones (they use the bottom tab bar), shown from 860px up */
+.site-nav { display: none; gap: var(--s-1); flex-wrap: wrap; justify-content: flex-end; }
+.nav-link {
+  min-height: 44px;          /* thumb-friendly */
+  padding: 0 var(--s-3);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--white);
+  font: 500 0.9rem var(--font-body);
+  cursor: pointer;
+  transition: border-color var(--fast) var(--ease), color var(--fast) var(--ease), background-color var(--fast) var(--ease);
+}
+.nav-link:hover { color: var(--gold-light); border-color: var(--bronze-line); }
+.nav-link[aria-current="page"] { color: var(--gold); border-color: var(--gold); }
+/* "Scan" is the main action, so it is a filled gold button */
+.nav-link--scan { background: var(--gold); color: var(--black); border-color: var(--gold); font-weight: 600; }
+.nav-link--scan:hover { background: var(--gold-light); color: var(--black); border-color: var(--gold-light); }
+.nav-link--scan[aria-current="page"] { color: var(--black); border-color: var(--white); }
+
+/* Bottom tab bar (phones). Fixed to the bottom of the screen, easy to reach with a thumb. */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  height: var(--tabbar-total);
+  padding: 0 var(--s-1) env(safe-area-inset-bottom, 0px);
+  background: var(--black);
+  border-top: 1px solid var(--bronze-line);
+}
+.tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin: var(--s-1) 2px;
+  padding: 0 2px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--muted-on-dark);
+  font: 500 0.75rem var(--font-body);   /* 12px */
+  cursor: pointer;
+  transition: color var(--fast) var(--ease), background-color var(--fast) var(--ease);
+}
+.tab:focus-visible { outline-offset: -3px; }
+.tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tab:hover { color: var(--white); }
+/* Current page: gold text, bolder, and a gold line on top (not color alone) */
+.tab[aria-current="page"] { color: var(--gold); font-weight: 600; box-shadow: inset 0 2px 0 var(--gold); }
+/* Scan = the main action, a filled gold tab */
+.tab--scan { background: var(--gold); color: var(--black); font-weight: 600; }
+.tab--scan:hover { background: var(--gold-light); color: var(--black); }
+.tab--scan[aria-current="page"] { background: var(--gold-light); color: var(--black); box-shadow: none; }
+
+/* Leave room for the tab bar so it never covers the bottom of a page */
+body { padding-bottom: var(--tabbar-total); }
+
+/* Each screen fills at least the visible height below the header */
+.screen {
+  min-height: calc(100vh - var(--header-h) - var(--tabbar-total));
+  min-height: calc(100dvh - var(--header-h) - var(--tabbar-total)); /* dvh = handles mobile browser bars */
+  padding: var(--s-5) var(--s-4) var(--s-7);
+  padding-bottom: max(var(--s-7), env(safe-area-inset-bottom));
+  animation: screen-in 220ms var(--ease);
+}
+.screen--dark { background: var(--black); color: var(--white); }
+.screen--light { background: var(--cream); color: var(--black); }
+
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.container { max-width: 40rem; margin: 0 auto; }
+
+/* ---------- 4. COMPONENTS ---------- */
+
+/* Headings */
+.display {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  color: var(--gold);           /* gold on black: 6.8:1, passes AA */
+}
+.display--dark { color: var(--black); }
+.screen-title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  color: var(--gold);
+  text-align: center;
+}
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  color: var(--gold-deep);      /* gold-deep on cream: 5.3:1 */
+  margin-top: var(--s-6);
+}
+.eyebrow {
+  margin: 0 0 var(--s-1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+.lead { font-size: 1.05rem; color: var(--muted-on-dark); }
+.lead--dark { color: var(--muted-on-light); }
+.hint { font-size: 0.9rem; color: var(--muted-on-dark); margin: var(--s-3) 0 0; text-align: center; }
+.small-print { font-size: 0.85rem; color: var(--muted-on-light); margin-top: var(--s-4); }
+
+/* ----- Buttons -----
+   All buttons are at least 48px tall for easy tapping. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  padding: var(--s-3) var(--s-5);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius);
+  font: 600 1rem var(--font-body);
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--fast) var(--ease),
+              border-color var(--fast) var(--ease),
+              color var(--fast) var(--ease),
+              transform var(--fast) var(--ease);
+}
+.btn:active { transform: scale(0.98); }
+.btn--block { display: flex; width: 100%; }
+.btn + .btn { margin-top: var(--s-3); }
+
+/* Gold button with black text: 6.8:1 */
+.btn--primary { background: var(--gold); color: var(--black); }
+.btn--primary:hover { background: var(--gold-light); }
+
+/* Black button for light screens */
+.btn--dark { background: var(--black); color: var(--white); }
+.btn--dark:hover { background: var(--charcoal); }
+
+/* Gold-deep button for light screens (white text 5.9:1) */
+.btn--gold-deep { background: var(--gold-deep); color: var(--white); }
+.btn--gold-deep:hover { background: var(--black); }
+
+/* Outlined buttons */
+.btn--outline-dark { background: transparent; color: var(--black); border-color: var(--black); }
+.btn--outline-dark:hover { background: var(--black); color: var(--white); }
+.btn--outline-light { background: transparent; color: var(--white); border-color: var(--muted-on-dark); }
+.btn--outline-light:hover { border-color: var(--gold); color: var(--gold-light); }
+
+/* Text-style buttons for less important actions */
+.btn--ghost { background: transparent; color: var(--gold-light); text-decoration: underline; text-underline-offset: 3px; }
+.btn--ghost:hover { color: var(--white); }
+.btn--ghost-dark { background: transparent; color: var(--gold-deep); text-decoration: underline; text-underline-offset: 3px; }
+.btn--ghost-dark:hover { color: var(--black); }
+
+/* Disabled state: dimmed but still readable */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  background: var(--charcoal);
+  color: var(--muted-on-dark);
+  border-color: var(--bronze-line);
+  transform: none;
+}
+
+/* ----- Home screen -----
+   Shop photo as the background, and the whole screen fits the window
+   with NO scrolling. How the "no scroll" works:
+   1. body.is-home (added by app.js) locks the page to exactly the window height.
+   2. Sizes inside use the window height (vh), so everything shrinks on short screens.
+   3. The long explanation is on its own page ("How the AI works"), not here. */
+body.is-home {
+  height: 100vh;
+  height: 100dvh;           /* dvh = the visible height on phones, even with the browser bar */
+  overflow: hidden;
+  overscroll-behavior: none;
+  display: flex;
+  flex-direction: column;
+}
+body.is-home .site-header { flex: none; }
+body.is-home main { flex: 1 1 auto; min-height: 0; }
+body.is-home .screen--home { height: 100%; }
+
+.screen.screen--home {
+  min-height: 0;
+  padding: var(--s-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--white);
+  /* The dark layer on top of the photo keeps the text readable.
+     Change the two 0.xx numbers to make the photo brighter or darker.
+     "70% center" decides which part of the photo shows on tall phone screens. */
+  background:
+    linear-gradient(rgba(11, 10, 9, 0.28), rgba(11, 10, 9, 0.42)),
+    url("../assets/shop-bg.jpg") 70% center / cover no-repeat,
+    var(--black);
+}
+
+.home-card {
+  width: 100%;
+  max-width: 26rem;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  text-align: center;
+  /* Mostly solid so text stays readable on top of the photo */
+  background: rgba(11, 10, 9, 0.86);
+  border: 1px solid var(--gold);
+  outline: 1px solid var(--bronze-line);   /* thin double frame, like the logo */
+  outline-offset: 5px;
+  border-radius: var(--radius-card);
+}
+.home-card__info,
+.home-card__invite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-height: 0;
+}
+.home-card__logo { width: clamp(48px, 11vh, 96px); height: auto; margin: 0 auto; }
+.home-card .display { margin: 0; font-size: clamp(1.4rem, 3vh + 0.6rem, 2.2rem); }
+.home-tagline { margin: 0; color: var(--muted-on-dark); font-size: 0.9rem; }
+
+/* Address / phone / hours */
+.shop-facts { margin: 0; display: grid; gap: var(--s-2); text-align: left; font-size: 0.9rem; line-height: 1.4; }
+.shop-facts > div { display: grid; grid-template-columns: 4.2rem 1fr; gap: var(--s-2); }
+.shop-facts dt { padding-top: 0.15em; color: var(--gold); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.shop-facts dd { margin: 0; }
+.shop-facts a { color: var(--white); text-underline-offset: 3px; }
+.home-card .placeholder { color: var(--gold-light); }
+
+.quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); }
+.quick-actions .btn { padding: var(--s-2); }
+.quick-actions .btn + .btn { margin-top: 0; }
+
+/* The invitation: question, pulsing arrows, then the big button */
+.invite__question {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.05rem, 2vh + 0.55rem, 1.4rem);
+  line-height: 1.3;
+  color: var(--white);
+}
+.arrows { display: flex; flex-direction: column; align-items: center; height: 30px; }
+.arrows span {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-right: 3px solid var(--gold);
+  border-bottom: 3px solid var(--gold);
+  transform: rotate(45deg);
+  animation: arrow-nudge 1.5s var(--ease) infinite;
+}
+.arrows span:nth-child(2) { animation-delay: 0.25s; }
+@keyframes arrow-nudge {
+  0%   { opacity: 0.2; transform: translateY(-4px) rotate(45deg); }
+  50%  { opacity: 1;   transform: translateY(2px) rotate(45deg); }
+  100% { opacity: 0.2; transform: translateY(6px) rotate(45deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrows span { animation: none; opacity: 1; }
+}
+.home-card .btn + .btn { margin-top: 0; }
+.privacy-line { margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--muted-on-dark); }
+.privacy-line strong { color: var(--white); }
+
+/* A button that looks like a text link (used inside sentences) */
+.link-btn {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--gold-light);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link-btn:hover { color: var(--white); }
+.link-btn--dark { color: var(--gold-deep); }
+.link-btn--dark:hover { color: var(--black); }
+
+/* Smaller button for secondary actions */
+.btn--sm { min-height: 44px; padding: var(--s-2) var(--s-4); font-size: 0.95rem; }
+
+/* Wide windows (desktop, tablet) and phones turned sideways: two columns */
+@media (min-width: 760px), (orientation: landscape) and (min-width: 560px) {
+  .home-card {
+    max-width: 56rem;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s-6);
+    padding: var(--s-5) var(--s-6);
+  }
+  .home-card__info,
+  .home-card__invite { flex: 1 1 0; justify-content: center; }
+  .home-card__info { text-align: left; }
+  .home-card__logo { margin: 0; }
+}
+
+/* Short windows: the logo is already in the header, so drop the big one here to make room */
+@media (max-height: 700px) {
+  .home-card__logo,
+  .home-tagline { display: none; }
+}
+/* Small phones (for example 320 x 568): tighter spacing and text */
+@media (max-height: 640px) {
+  :root { --header-h: 52px; --tabbar-h: 56px; }
+  .site-header { padding-top: var(--s-1); padding-bottom: var(--s-1); }
+  .brand img { width: 32px; height: 32px; }
+  .home-card { padding: var(--s-3); gap: var(--s-2); }
+  .home-card__info,
+  .home-card__invite { gap: var(--s-2); }
+  /* Label and value flow on one line, so the address uses the full width */
+  .shop-facts { font-size: 0.82rem; gap: 4px; }
+  .shop-facts > div { display: block; }
+  .shop-facts dt,
+  .shop-facts dd { display: inline; }
+  .shop-facts dt { margin-right: 6px; }
+  .quick-actions .btn { min-height: 40px; }
+  .arrows { height: 22px; }
+  .privacy-line { font-size: 0.75rem; }
+}
+/* The very smallest phones (for example 320 x 568) */
+@media (max-height: 600px) {
+  .screen.screen--home { padding: var(--s-2); }
+  .home-card .display { font-size: 1.3rem; }
+  .invite__question { font-size: 1rem; }
+  .arrows { height: 20px; }
+  .home-card .btn--block { min-height: 44px; }
+}
+/* Very short windows (phone turned sideways): slimmer header, tab bar and card */
+@media (max-height: 460px) {
+  :root { --header-h: 52px; --tabbar-h: 48px; }
+  .site-header { padding-top: var(--s-1); padding-bottom: var(--s-1); }
+  .brand img { width: 32px; height: 32px; }
+  .screen.screen--home { padding-top: var(--s-2); padding-bottom: var(--s-2); }
+  .home-card { padding: var(--s-3) var(--s-4); gap: var(--s-4); }
+  .tab { flex-direction: row; gap: 6px; font-size: 0.8rem; }
+  .tab svg { width: 20px; height: 20px; }
+}
+/* Very narrow phones (320px wide): keep the header on one line */
+@media (max-width: 359px) {
+  .brand__sub { display: none; }
+}
+
+/* ----- Notices (privacy, warnings) ----- */
+.notice {
+  text-align: left;
+  padding: var(--s-4);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+}
+.notice--dark { background: var(--charcoal); border: 1px solid var(--bronze-line); color: var(--white); }
+.notice--light { background: var(--white); border: 1.5px solid var(--gold-deep); color: var(--black); margin-top: var(--s-4); }
+.notice__title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: var(--gold);
+  margin-bottom: var(--s-2);
+}
+.notice__list { margin: 0; padding-left: 1.2rem; }
+.notice__list li + li { margin-top: var(--s-1); }
+
+/* ----- Collapsible panel (<details>), used for "Why this result?" ----- */
+.why {
+  margin-top: var(--s-4);
+  text-align: left;
+  border-radius: var(--radius);
+}
+.why summary {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: var(--s-2) var(--s-4);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.why summary::-webkit-details-marker { display: none; }
+/* Our own + / - marker */
+.why summary::after { content: "+"; margin-left: auto; font-size: 1.25rem; }
+.why[open] summary::after { content: "\2212"; }
+
+/* ----- Panels (camera permission card) ----- */
+.panel {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: var(--s-5) var(--s-4);
+  border-radius: var(--radius-card);
+}
+.panel--dark { background: var(--charcoal); border: 1px solid var(--bronze-line); }
+
+/* ----- Camera ----- */
+.camera { max-width: 30rem; margin: 0 auto; }
+.camera__frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--gold);
+  background: var(--charcoal);
+}
+/* The video keeps its real shape (no cropping) so the overlay lines up exactly.
+   scaleX(-1) mirrors it like a selfie camera; the overlay is mirrored the same way. */
+.camera__video,
+.camera__overlay {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: scaleX(-1);
+}
+.camera__overlay {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  pointer-events: none;
+}
+/* Uploaded photos are NOT mirrored */
+.camera__frame.is-photo .camera__video,
+.camera__frame.is-photo .camera__overlay { transform: none; }
+
+.guidance {
+  margin: var(--s-3) 0;
+  padding: var(--s-3) var(--s-4);
+  min-height: 3.2em;
+  border-left: 3px solid var(--gold);
+  border-radius: 0;
+  background: var(--charcoal);
+  font-weight: 500;
+}
+.guidance.is-ok { border-left-color: var(--gold-light); color: var(--gold-light); }
+
+.camera__actions { margin-top: var(--s-3); }
+
+/* Capture progress bar */
+.progress {
+  height: 6px;
+  margin-bottom: var(--s-3);
+  background: var(--bronze-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress__bar {
+  width: 0%;
+  height: 100%;
+  background: var(--gold);
+  transition: width 80ms linear;
+}
+
+/* ----- Cards (light screens) ----- */
+.card {
+  background: var(--white);
+  border: 1px solid #E8DCC8;   /* light tint of gold, decorative only */
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+  padding: var(--s-5) var(--s-4);
+}
+
+/* ----- Result card ----- */
+.result-card { text-align: center; }
+.result-card .display { margin-bottom: var(--s-2); }
+.result-card__desc { color: var(--muted-on-light); margin-top: var(--s-3); }
+
+/* Your face picture at the top of the result card */
+.result-photo { margin: 0 auto var(--s-4); max-width: 22rem; }
+.result-photo__canvas {
+  display: block;
+  width: 168px;
+  height: auto;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  background: var(--black);
+  border: 2px solid var(--gold-deep);
+  border-radius: var(--radius-card);
+}
+.result-photo figcaption {
+  margin-top: var(--s-2);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--muted-on-light);
+}
+
+/* Confidence indicator: 3 bars + a word (never color alone) */
+.confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 0.9rem;
+  color: var(--muted-on-light);
+}
+.confidence__label { font-weight: 500; }
+.confidence__bars { display: inline-flex; gap: 3px; align-items: flex-end; }
+.confidence__bars span {
+  width: 8px;
+  border-radius: 2px;
+  background: #E8DCC8;
+  border: 1px solid var(--gold-deep);
+}
+.confidence__bars span:nth-child(1) { height: 8px; }
+.confidence__bars span:nth-child(2) { height: 13px; }
+.confidence__bars span:nth-child(3) { height: 18px; }
+.confidence__bars span.is-on { background: var(--gold-deep); }
+.confidence__text { font-weight: 600; color: var(--black); }
+
+.why { border: 1px solid #E8DCC8; margin-top: var(--s-4); }
+.why summary { color: var(--gold-deep); }
+.why__list { margin: 0; padding: 0 var(--s-4) var(--s-4) 2.2rem; font-size: 0.95rem; }
+.why__list li + li { margin-top: var(--s-2); }
+
+.estimate-note {
+  margin: var(--s-4) 0 0;
+  padding: var(--s-3);
+  font-size: 0.875rem;
+  color: var(--muted-on-light);
+  background: var(--cream);
+  border-radius: var(--radius);
+  text-align: left;
+}
+
+/* ----- Hairstyle cards ----- */
+.style-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-3);
+}
+.style-card {
+  display: flex;
+  gap: var(--s-4);
+  align-items: flex-start;
+  background: var(--white);
+  border: 1px solid #E8DCC8;
+  border-radius: var(--radius-card);
+  padding: var(--s-4);
+  box-shadow: var(--shadow);
+}
+/* Square slot that holds the SVG illustration now and a real shop photo later */
+.style-card__media {
+  flex: 0 0 84px;
+  width: 84px;
+  height: 84px;
+  border-radius: var(--radius);
+  background: var(--black);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.style-card__media svg,
+.style-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.style-card__name { font-family: var(--font-heading); font-size: 1.1rem; margin: 0 0 var(--s-1); color: var(--black); }
+.style-card__why { margin: 0; font-size: 0.95rem; color: var(--muted-on-light); }
+
+/* ----- Styles to avoid ----- */
+.avoid-list { margin: 0; padding: 0; list-style: none; }
+.avoid-list li {
+  padding: var(--s-3) var(--s-4);
+  border-left: 3px solid var(--gold-deep);
+  background: var(--white);
+  border-radius: 0;
+  margin-bottom: var(--s-2);
+  font-size: 0.95rem;
+}
+.avoid-list strong { color: var(--black); }
+
+/* ----- Services ----- */
+.service-list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s-2); }
+.service-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: var(--white);
+  border: 1px solid #E8DCC8;
+  border-radius: var(--radius);
+}
+.service-list .service-name { font-weight: 600; }
+.service-list .service-note { display: block; font-size: 0.85rem; color: var(--muted-on-light); font-weight: 400; }
+.service-list .service-price { white-space: nowrap; color: var(--gold-deep); font-weight: 600; }
+
+/* Placeholder text that the owner must confirm */
+.placeholder { font-style: italic; color: var(--gold-deep); }
+
+/* ----- Call-to-action + result buttons ----- */
+.cta-group { margin-top: var(--s-6); }
+.result-actions { margin-top: var(--s-5); }
+.share-status { margin: var(--s-3) 0 0; min-height: 1.5em; text-align: center; font-weight: 500; color: var(--gold-deep); }
+
+/* ----- About: contact details ----- */
+.contact-list { margin: var(--s-4) 0 0; }
+.contact-list > div + div { margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid #E8DCC8; }
+.contact-list dt { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold-deep); }
+.contact-list dd { margin: var(--s-1) 0 0; }
+.contact-list a { color: var(--black); text-underline-offset: 3px; }
+
+/* ----- Feedback ----- */
+.question-list { margin: var(--s-4) 0 var(--s-5); padding-left: 2.5rem; }
+.question-list li + li { margin-top: var(--s-2); }
+
+/* ----- Styles page (hairstyle guide) ----- */
+.shape-picker { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-4) 0 var(--s-5); }
+.shape-chip {
+  min-height: 44px;
+  padding: 0 var(--s-4);
+  background: var(--white);
+  border: 1.5px solid var(--black);
+  border-radius: var(--radius);
+  color: var(--black);
+  font: 600 0.95rem var(--font-body);
+  cursor: pointer;
+  transition: background-color var(--fast) var(--ease), color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+.shape-chip:hover { border-color: var(--gold-deep); color: var(--gold-deep); }
+/* Chosen shape: filled black (not color alone, the fill changes too) */
+.shape-chip[aria-pressed="true"] { background: var(--black); border-color: var(--black); color: var(--white); }
+.guide-card { text-align: center; }
+.guide-card__name { margin: 0 0 var(--s-2); font-family: var(--font-heading); font-size: 1.6rem; color: var(--black); }
+.guide-card__desc { margin: 0; color: var(--muted-on-light); }
+
+/* ----- How the AI works page ----- */
+.how-figure { max-width: 17rem; margin: var(--s-4) auto var(--s-5); }
+.how-figure svg { display: block; width: 100%; height: auto; }
+.how-figure figcaption { margin-top: var(--s-2); font-size: 0.85rem; color: var(--muted-on-light); text-align: center; }
+.how-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: var(--s-3); }
+.how-steps li {
+  position: relative;
+  counter-increment: step;
+  padding: var(--s-4) var(--s-4) var(--s-4) 3.6rem;
+  background: var(--white);
+  border: 1px solid #E8DCC8;
+  border-radius: var(--radius-card);
+}
+.how-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: var(--s-4);
+  top: var(--s-4);
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--gold-light);
+  font: 700 1rem var(--font-heading);
+}
+.how-list { margin: 0; padding-left: 1.2rem; }
+.how-list li + li { margin-top: var(--s-2); }
+.small-print--flush { margin-top: 0; }
+code {
+  padding: 0 0.3em;
+  background: var(--white);
+  border: 1px solid #E8DCC8;
+  border-radius: 4px;
+  font-family: ui-monospace, Consolas, "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+/* Privacy list inside the Scan permission card */
+.scan-privacy { margin: 0 0 var(--s-4); padding-left: 1.2rem; font-size: 0.95rem; color: var(--muted-on-dark); }
+.scan-privacy strong { color: var(--white); }
+
+/* ---------- 5. OVERLAYS ---------- */
+
+/* Loading overlay while the AI model downloads */
+.loading,
+.error-box {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+  background: rgba(11, 10, 9, 0.88);  /* Barber black, see-through */
+}
+.loading[hidden],
+.error-box[hidden] { display: none; }
+.loading__box { text-align: center; color: var(--white); }
+.spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--s-4);
+  border: 4px solid var(--bronze-line);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Friendly error box (icon + words, not color alone) */
+.error-box__inner {
+  width: 100%;
+  max-width: 26rem;
+  padding: var(--s-5) var(--s-4);
+  background: var(--charcoal);
+  border: 1.5px solid var(--gold);
+  border-radius: var(--radius-card);
+  text-align: center;
+  color: var(--white);
+}
+.error-box__icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--s-3);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  font: 700 1.5rem var(--font-heading);
+  color: var(--gold);
+}
+.error-box__title { font-family: var(--font-heading); color: var(--gold); font-size: 1.3rem; }
+.error-box__msg { color: var(--muted-on-dark); }
+
+.noscript { padding: var(--s-5); text-align: center; color: var(--white); }
+
+/* ---------- 6. ACCESSIBILITY HELPERS ---------- */
+
+/* Hidden visually but still read by screen readers */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* "Skip to content" link appears only when focused with the keyboard */
+.skip-link {
+  position: absolute;
+  left: var(--s-2);
+  top: -100px;
+  z-index: 100;
+  padding: var(--s-2) var(--s-4);
+  background: var(--gold);
+  color: var(--black);
+  font-weight: 600;
+  border-radius: var(--radius);
+}
+.skip-link:focus { top: var(--s-2); }
+
+#main:focus { outline: none; }
+/* Headings get focus from app.js when a screen opens (for screen readers).
+   They aren't clickable, so they don't need a visible focus box. */
+[tabindex="-1"]:focus { outline: none; }
+
+/* Respect users who turned on "Reduce motion" on their phone */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- 7. LARGER SCREENS (mobile-first: these add on top) ---------- */
+@media (min-width: 640px) {
+  .screen { padding: var(--s-6) var(--s-5) var(--s-7); }
+  .result-photo__canvas { width: 200px; }
+  .style-grid { grid-template-columns: 1fr 1fr; }
+  .style-card { flex-direction: column; }
+  .style-card__media { width: 100%; height: 140px; flex-basis: auto; }
+
+  /* Buttons side by side instead of stacked */
+  .cta-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-3); }
+  .cta-group .btn + .btn { margin-top: 0; }
+}
+
+@media (min-width: 860px) {
+  :root { --tabbar-total: 0px; }
+  .tabbar { display: none; }
+  .site-nav { display: flex; }
+}
+
+@media (min-width: 1024px) {
+  .site-header { padding-left: var(--s-6); padding-right: var(--s-6); }
+  .container { max-width: 52rem; }
+  .style-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---------- Example photos (faces hidden) ---------- */
+.examples { margin: .75rem 0 0; font-size: .8rem; opacity: .75; line-height: 1.4; }
+.style-card--photo .style-card__media { background: #e7ddcc; }
+.style-card__media img { object-position: 50% 30%; }
+@media (min-width: 640px) { .style-card--photo .style-card__media { height: auto; aspect-ratio: 1; } }
+
+/* ---------- Clickable hairstyle cards + "try it on" window ---------- */
+.style-card { position: relative; }
+.style-card__open {
+  all: unset; cursor: pointer; font: inherit; color: inherit; display: block;
+}
+.style-card__open::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-card); } /* whole card is the button */
+.style-card:has(.style-card__open:focus-visible) { outline: 3px solid var(--gold); outline-offset: 2px; }
+.style-card:has(.style-card__open):hover { border-color: var(--gold); }
+.style-card__hint { margin: var(--s-2) 0 0; font-size: 0.8rem; font-weight: 600; color: var(--gold-deep); }
+
+.tryon {
+  border: 0; padding: 0; border-radius: 20px; width: min(92vw, 440px); max-height: 92dvh; overflow: auto;
+  background: var(--cream); color: var(--black); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.tryon::backdrop { background: rgba(11, 10, 9, 0.72); }
+.tryon__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4) var(--s-4) var(--s-3); }
+.tryon__title { margin: 0; font-family: var(--font-heading); font-size: 1.3rem; }
+.tryon__x { all: unset; cursor: pointer; width: 44px; height: 44px; display: grid; place-items: center; font-size: 1.8rem; line-height: 1; border-radius: 50%; }
+.tryon__x:hover { background: #E8DCC8; }
+.tryon__x:focus-visible { outline: 3px solid var(--gold); }
+.tryon__canvas { display: block; width: calc(100% - 2 * var(--s-4)); margin: 0 auto; aspect-ratio: 1; border-radius: 14px; background: #e7ddcc; }
+.tryon__msg { margin: var(--s-3) var(--s-4) 0; font-size: 0.85rem; line-height: 1.45; color: var(--muted-on-light); }
+.tryon__actions { padding: var(--s-4); display: grid; gap: var(--s-2); }

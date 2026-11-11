@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  TLC Barbershop: Face-Shape Haircut Advisor
+  PTF50 Final Project, Group 3, Angeles University Foundation
+  ------------------------------------------------------------
+  This is the ONLY HTML page. The app is a "single-page app":
+  every screen (Landing, Camera, Results, About, Feedback) is a
+  <section class="screen"> below. js/app.js shows one screen at a
+  time by toggling the `hidden` attribute.
+
+  PRIVACY: nothing on this page sends images anywhere. The camera
+  video and any uploaded photo stay inside this browser tab.
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- viewport-fit=cover lets us respect the iPhone notch with safe-area padding in the CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TLC Haircut Advisor</title>
+  <meta name="description" content="Find a haircut that suits your face shape. Free tool by TLC Barbershop, Angeles City. Runs entirely on your phone; no photos are uploaded." />
+  <!-- Colors the phone's browser bar to match the app (Barber black) -->
+  <meta name="theme-color" content="#0B0A09" />
+  <link rel="icon" type="image/png" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+
+  <!--
+    FONTS (free Google Fonts):
+    - Playfair Display for headings (echoes the serif "TLC" in the logo)
+    - Inter for body text and buttons
+    If these fail to load (offline, blocked), the CSS falls back to
+    Georgia and the phone's system font, so the app still works.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="is-home">
+  <!-- Keyboard users can jump straight past the header -->
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header">
+    <button class="brand" type="button" data-goto="home" aria-label="TLC Barbershop Haircut Advisor, go to the home page">
+      <img src="assets/tlc-logo.png" alt="" width="40" height="40" />
+      <span class="brand__text">
+        <span class="brand__name">TLC Barbershop</span>
+        <span class="brand__sub">Haircut Advisor</span>
+      </span>
+    </button>
+    <!-- Top navigation: shown on tablets and computers. Phones use the bottom tab bar instead. -->
+    <nav class="site-nav" aria-label="Main">
+      <button type="button" class="nav-link" data-goto="home">Home</button>
+      <button type="button" class="nav-link" data-goto="styles">Styles</button>
+      <button type="button" class="nav-link nav-link--scan" data-goto="camera">Scan</button>
+      <button type="button" class="nav-link" data-goto="services">Services</button>
+      <button type="button" class="nav-link" data-goto="how">How it works</button>
+      <button type="button" class="nav-link" data-goto="feedback">Feedback</button>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- ===================== 1. HOME ===================== -->
+    <section id="screen-home" class="screen screen--home" aria-labelledby="home-title">
+      <!--
+        HOME = the shop's front door. It shows TLC Barbershop's details first, then
+        invites the visitor to try the face-shape tool.
+        - Background photo + no-scroll layout: see "Home screen" in css/styles.css.
+        - The contact details come from js/data.js (SHOP), so the owner edits them in one place.
+        - Everything here fits the window with NO scrolling, so the long explanation lives
+          on its own page ("How the AI works").
+      -->
+      <div class="home-card">
+        <div class="home-card__info">
+          <img class="home-card__logo" src="assets/tlc-logo.png"
+               alt="TLC Barbershop logo: gold letters TLC with scissors and a bow tie, above the word Barbershop"
+               width="160" height="160" />
+          <h1 id="home-title" class="display">TLC Barbershop</h1>
+          <p class="home-tagline">Barbershop in Angeles City, Pampanga</p>
+
+          <dl class="shop-facts">
+            <div><dt>Address</dt><dd data-shop="address">531 Jose Abad Santos St., Salapungan, Angeles City, Pampanga, 2009</dd></div>
+            <div><dt>Phone</dt><dd><a data-shop="phoneDisplay" data-shop-href="phoneLink" href="tel:+639608146420">0960 814 6420</a></dd></div>
+            <div><dt>Hours</dt><dd class="placeholder" data-shop="hours" id="shop-hours">TO CONFIRM WITH TLC BARBERSHOP</dd></div>
+          </dl>
+
+          <div class="quick-actions">
+            <a class="btn btn--outline-light btn--sm" data-shop-href="phoneLink" href="tel:+639608146420">Call</a>
+            <a class="btn btn--outline-light btn--sm" data-shop-href="mapLink" target="_blank" rel="noopener"
+               href="https://www.google.com/maps/search/?api=1&query=531+Jose+Abad+Santos+St%2C+Salapungan%2C+Angeles+City%2C+Pampanga+2009">Directions</a>
+            <a class="btn btn--outline-light btn--sm" data-shop-href="facebook" target="_blank" rel="noopener"
+               href="https://www.facebook.com/profile.php?id=61593644030045">Facebook</a>
+          </div>
+        </div>
+
+        <div class="home-card__invite">
+          <p class="invite__question">
+            Would you like to see your face shape and the haircuts that would suit you?
+          </p>
+          <!-- Two chevrons that gently pulse downward, pointing at the button -->
+          <div class="arrows" aria-hidden="true"><span></span><span></span></div>
+          <button id="btn-start" type="button" class="btn btn--primary btn--block">
+            Start Haircut Advisor
+          </button>
+          <!-- Short privacy notice (Data Privacy Act of 2012, RA 10173). The Scan page shows it again in full. -->
+          <p class="privacy-line">
+            <strong>Your privacy:</strong> your camera image stays on this phone. Nothing is uploaded,
+            saved, or recorded, and we don't ask for personal details.
+            <button type="button" class="link-btn" data-goto="how">Learn more</button>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 2. CAMERA SCREEN ===================== -->
+    <section id="screen-camera" class="screen screen--dark" aria-labelledby="camera-title" hidden>
+      <h1 id="camera-title" class="screen-title">Scan your face</h1>
+
+      <!-- Step A: permission card, shown BEFORE we ask the browser for the camera -->
+      <div id="camera-permission" class="panel panel--dark">
+        <h2 class="notice__title">Before we start</h2>
+        <p>
+          To measure your face shape, the app needs your <strong>front camera</strong>.
+        </p>
+        <!-- Privacy notice shown BEFORE the camera is requested (RA 10173) -->
+        <ul class="notice__list scan-privacy">
+          <li>Your camera image is processed <strong>only on this phone</strong>.</li>
+          <li>No photo or video is uploaded, saved, or recorded.</li>
+          <li>We don't ask for your name or any personal details.</li>
+          <li>You can stop the camera at any time.</li>
+        </ul>
+        <button id="btn-allow-camera" type="button" class="btn btn--primary btn--block">
+          Allow camera
+        </button>
+        <button type="button" class="btn btn--ghost btn--block js-upload-trigger">
+          Upload a photo instead
+        </button>
+        <p class="hint">
+          Tip: good, even light on your face works best.
+          <button type="button" class="link-btn" data-goto="how">How the AI works</button>
+        </p>
+      </div>
+
+      <!-- Step B: live camera view (hidden until the camera starts) -->
+      <div id="camera-live" class="camera" hidden>
+        <div class="camera__frame">
+          <!--
+            playsinline + muted are REQUIRED for iPhone Safari, otherwise the video
+            opens in full-screen or refuses to play.
+          -->
+          <video id="video" class="camera__video" playsinline muted autoplay
+                 aria-label="Live camera preview of your face"></video>
+          <!-- We draw the face outline and guide on this canvas, on top of the video -->
+          <canvas id="overlay" class="camera__overlay" aria-hidden="true"></canvas>
+        </div>
+
+        <!-- Live guidance. aria-live lets screen readers announce changes. -->
+        <p id="guidance" class="guidance" role="status" aria-live="polite">Starting camera…</p>
+
+        <!-- Progress bar shown while Capture collects frames -->
+        <div id="capture-progress" class="progress" hidden>
+          <div class="progress__bar" id="capture-progress-bar"></div>
+        </div>
+
+        <div class="camera__actions">
+          <button id="btn-capture" type="button" class="btn btn--primary btn--block" disabled>
+            Capture
+          </button>
+          <button id="btn-stop-camera" type="button" class="btn btn--outline-light btn--block">
+            Stop camera
+          </button>
+          <button type="button" class="btn btn--ghost btn--block js-upload-trigger">
+            Upload a photo instead
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden file input used by every "Upload a photo instead" button.
+           The photo is read locally with JavaScript and never sent anywhere. -->
+      <input id="file-input" type="file" accept="image/*" class="visually-hidden"
+             tabindex="-1" aria-hidden="true" />
+    </section>
+
+    <!-- ===================== 3. RESULTS SCREEN ===================== -->
+    <section id="screen-results" class="screen screen--light" aria-labelledby="result-shape" hidden>
+      <div class="container">
+
+        <!-- Main result card -->
+        <article class="card result-card">
+          <!--
+            The user's own face, cropped from the camera frame (or the uploaded photo),
+            with the gold lines the AI measured. app.js draws it on this canvas.
+            PRIVACY: it lives only in memory on this phone. It is cleared as soon as
+            the user leaves this screen, and it is never saved or uploaded.
+          -->
+          <figure class="result-photo" id="result-photo-wrap" hidden>
+            <canvas id="result-photo" class="result-photo__canvas" width="360" height="360"
+                    role="img" aria-label="Your face with the gold lines the AI measured"></canvas>
+            <figcaption>
+              The gold lines show what the AI measured. This picture stays on your phone and is
+              not saved or uploaded.
+            </figcaption>
+          </figure>
+          <p class="eyebrow">Your estimated face shape</p>
+          <h1 id="result-shape" class="display display--dark">Oval</h1>
+          <div class="confidence">
+            <span class="confidence__label">Confidence</span>
+            <!-- 3 bars, filled by app.js according to the confidence level -->
+            <span class="confidence__bars" id="confidence-bars" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <span id="confidence-text" class="confidence__text">Medium</span>
+          </div>
+          <p id="result-description" class="result-card__desc"></p>
+
+          <details class="why">
+            <summary>Why this result? (your measurements)</summary>
+            <ul id="result-why" class="why__list"></ul>
+          </details>
+
+          <p class="estimate-note" role="note">
+            This is an estimate from a photo, not a professional assessment. Lighting, hair, glasses,
+            and camera angle can change the result. Our barbers are happy to advise you in person.
+          </p>
+        </article>
+
+        <!-- Recommended hairstyles -->
+        <h2 class="section-title">Hairstyles that suit you</h2>
+        <ul id="hairstyle-list" class="style-grid" aria-label="Recommended hairstyles"></ul>
+        <div id="result-examples" class="examples" hidden></div>
+
+        <!-- Styles to avoid -->
+        <h2 class="section-title">Use with care</h2>
+        <ul id="avoid-list" class="avoid-list" aria-label="Hairstyles to avoid or use carefully"></ul>
+
+        <!-- Matching services -->
+        <h2 class="section-title">Suggested services at TLC</h2>
+        <ul id="service-list" class="service-list" aria-label="Suggested barbershop services"></ul>
+        <p class="small-print">Prices and services shown are subject to confirmation at the shop.</p>
+
+        <!-- Call-to-action buttons -->
+        <div class="cta-group">
+          <a id="cta-call" class="btn btn--dark btn--block" data-shop-href="phoneLink" href="tel:+639608146420">
+            Call TLC Barbershop
+          </a>
+          <a id="cta-facebook" class="btn btn--outline-dark btn--block" data-shop-href="facebook"
+             href="https://www.facebook.com/profile.php?id=61593644030045"
+             target="_blank" rel="noopener">
+            Message us on Facebook
+          </a>
+          <a id="cta-map" class="btn btn--outline-dark btn--block" data-shop-href="mapLink"
+             href="https://www.google.com/maps/search/?api=1&query=531+Jose+Abad+Santos+St%2C+Salapungan%2C+Angeles+City%2C+Pampanga+2009"
+             target="_blank" rel="noopener">
+            View location
+          </a>
+        </div>
+
+        <div class="result-actions">
+          <button id="btn-share" type="button" class="btn btn--gold-deep btn--block">
+            Save / share result
+          </button>
+          <button id="btn-try-again" type="button" class="btn btn--ghost-dark btn--block">
+            Try again
+          </button>
+          <p id="share-status" class="share-status" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 4. STYLES (hairstyle guide) ===================== -->
+    <!-- Browse the advice for every face shape, no camera needed. Filled in by app.js from js/data.js -->
+    <section id="screen-styles" class="screen screen--light" aria-labelledby="styles-title" hidden>
+      <div class="container">
+        <h1 id="styles-title" class="display display--dark">Hairstyle guide</h1>
+        <p class="lead lead--dark">
+          Pick a face shape to see the haircuts that suit it. Not sure which one is yours?
+          <button type="button" class="link-btn link-btn--dark" data-goto="camera">Scan your face</button>
+        </p>
+
+        <div id="shape-picker" class="shape-picker" role="group" aria-label="Choose a face shape"></div>
+
+        <article class="card guide-card" aria-live="polite">
+          <h2 id="guide-shape" class="guide-card__name"></h2>
+          <p id="guide-description" class="guide-card__desc"></p>
+        </article>
+
+        <h2 class="section-title">Hairstyles that suit this shape</h2>
+        <ul id="guide-hairstyles" class="style-grid" aria-label="Recommended hairstyles"></ul>
+        <div id="guide-examples" class="examples" hidden></div>
+
+        <h2 class="section-title">Use with care</h2>
+        <ul id="guide-avoid" class="avoid-list" aria-label="Hairstyles to avoid or use carefully"></ul>
+
+        <p class="small-print">
+          General grooming guidance. The drawings are illustrations, and the barber has the final say
+          on what works with your hair.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================== 5. SERVICES ===================== -->
+    <section id="screen-services" class="screen screen--light" aria-labelledby="services-title" hidden>
+      <div class="container">
+        <h1 id="services-title" class="display display--dark">Services</h1>
+        <p class="lead lead--dark">
+          The kinds of services a barbershop like TLC may offer. The real menu and prices are still
+          being confirmed with the shop.
+        </p>
+        <ul id="services-all" class="service-list" aria-label="Barbershop services"></ul>
+        <p class="small-print">
+          <span class="placeholder">TO CONFIRM WITH TLC BARBERSHOP:</span> which services are offered,
+          their names, and their prices. Edit them in <code>js/data.js</code>.
+        </p>
+        <div class="cta-group">
+          <a class="btn btn--dark btn--block" data-shop-href="phoneLink" href="tel:+639608146420">Call TLC Barbershop</a>
+          <a class="btn btn--outline-dark btn--block" data-shop-href="facebook" target="_blank" rel="noopener"
+             href="https://www.facebook.com/profile.php?id=61593644030045">Message us on Facebook</a>
+          <a class="btn btn--outline-dark btn--block" data-shop-href="mapLink" target="_blank" rel="noopener"
+             href="https://www.google.com/maps/search/?api=1&query=531+Jose+Abad+Santos+St%2C+Salapungan%2C+Angeles+City%2C+Pampanga+2009">View location</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 6. HOW THE AI WORKS ===================== -->
+    <section id="screen-how" class="screen screen--light" aria-labelledby="how-title" hidden>
+      <div class="container">
+        <h1 id="how-title" class="display display--dark">How the AI works</h1>
+        <p class="lead lead--dark">In plain words, so you can explain it to anyone.</p>
+
+        <!-- Diagram of what the AI measures (original drawing in the app palette) -->
+        <figure class="how-figure">
+          <svg viewBox="0 0 240 290" role="img" aria-labelledby="how-svg-title how-svg-desc">
+            <title id="how-svg-title">The five measurements</title>
+            <desc id="how-svg-desc">A simple face with numbered gold lines: 1 face length, 2 forehead width, 3 cheekbone width, 4 jaw width, and 5 the chin angle.</desc>
+            <rect width="240" height="290" rx="12" fill="#0B0A09"/>
+            <ellipse cx="120" cy="146" rx="68" ry="104" fill="#1C1915" stroke="#3A332B" stroke-width="2"/>
+            <circle cx="96" cy="124" r="4" fill="#B9B0A5"/><circle cx="144" cy="124" r="4" fill="#B9B0A5"/>
+            <path d="M120 128v22M108 152q12 6 24 0M104 178q16 10 32 0" fill="none" stroke="#B9B0A5" stroke-width="2" stroke-linecap="round"/>
+            <g stroke="#C98A35" stroke-width="3" stroke-linecap="round" fill="none">
+              <path d="M120 42V250"/>
+              <path d="M78 88H162"/>
+              <path d="M52 142H188"/>
+              <path d="M84 206H156"/>
+              <path d="M84 206L120 250L156 206"/>
+            </g>
+            <g fill="#E2B677"><circle cx="120" cy="26" r="11"/><circle cx="178" cy="88" r="11"/><circle cx="204" cy="142" r="11"/><circle cx="172" cy="206" r="11"/><circle cx="120" cy="270" r="11"/></g>
+            <g font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600" fill="#0B0A09" text-anchor="middle">
+              <text x="120" y="31">1</text><text x="178" y="93">2</text><text x="204" y="147">3</text><text x="172" y="211">4</text><text x="120" y="275">5</text>
+            </g>
+          </svg>
+          <figcaption>The five measurements: <strong>1</strong> face length, <strong>2</strong> forehead width,
+            <strong>3</strong> cheekbone width, <strong>4</strong> jaw width, <strong>5</strong> chin angle.</figcaption>
+        </figure>
+
+        <h2 class="section-title">Step by step</h2>
+        <ol class="how-steps">
+          <li><strong>Find the face.</strong> The app uses <strong>MediaPipe Face Landmarker</strong>, a free AI
+            model from Google. It runs inside your browser and finds <strong>478 points</strong> on your face
+            (eyes, nose, lips, jawline, forehead) in every camera frame.</li>
+          <li><strong>Measure.</strong> From those points we measure the five things in the picture above.</li>
+          <li><strong>Average.</strong> When you tap Capture, we measure about 12 good frames and average them, so
+            one blurry frame can't change the answer.</li>
+          <li><strong>Compare ratios.</strong> We compare the measurements as ratios. For example, a face much longer
+            than it is wide is "Rectangle", and a forehead wider than the jaw is "Heart". The cut-off numbers are
+            in one clearly labelled settings object in <code>js/faceShape.js</code>.</li>
+          <li><strong>Suggest.</strong> The face shape picks hairstyles and services from the lists in
+            <code>js/data.js</code>. If the AI model is removed, there are no landmarks and the app can't work
+            out a face shape at all.</li>
+        </ol>
+
+        <h2 class="section-title">What can change the result</h2>
+        <ul class="how-list">
+          <li>Dim or uneven light, glasses, and hair or a cap covering the forehead.</li>
+          <li>A turned or tilted head, or a camera held very close or at a strange angle.</li>
+          <li>The AI sees the upper forehead, not the real hairline, so the face length is an estimate.</li>
+          <li>Face-shape rules are simple and not exact. Treat the result as a starting point, and let your
+            barber advise you in person.</li>
+        </ul>
+
+        <h2 class="section-title">Your privacy</h2>
+        <ul class="how-list">
+          <li>Everything runs on your own phone. No server, no account, no API key.</li>
+          <li>No photo or video is uploaded, saved, or recorded. The picture on the results page is erased
+            when you leave it.</li>
+          <li>We collect no personal data, in line with the Data Privacy Act of 2012 (RA 10173).</li>
+          <li>No generative AI is used. The app only measures; it doesn't create or edit pictures.</li>
+        </ul>
+
+        <h2 class="section-title">About this project</h2>
+        <p class="small-print small-print--flush">
+          Made for TLC Barbershop as a community project for PTF50, Professional Track 5: Web-Based AI
+          Development, College of Computer Studies, Angeles University Foundation. Instructor: Dr. James A.
+          Esquivel. Group 3: Aquino, Alvin Gino; Cunanan, Lovely Irene; Mercado, Timothy Sean; Pasion, Val Andrei.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================== 7. FEEDBACK SCREEN ===================== -->
+    <!--
+      We chose a free GOOGLE FORM for feedback because testers use their own
+      phones. Answers saved in each phone's browser would be scattered across
+      devices; a Google Form collects all answers in one place for our report.
+      The app itself still stores nothing.
+    -->
+    <section id="screen-feedback" class="screen screen--light" aria-labelledby="feedback-title" hidden>
+      <div class="container">
+        <h1 id="feedback-title" class="display display--dark">Help us improve</h1>
+        <p class="lead lead--dark">
+          You helped test our class project. The form takes about 1 minute and has 4 questions:
+        </p>
+        <ol class="question-list card">
+          <li>Was the app easy to use? (1 to 5)</li>
+          <li>Was the AI suggestion helpful? (1 to 5)</li>
+          <li>What confused you?</li>
+          <li>What one thing would make it better?</li>
+        </ol>
+        <!--
+          PLACEHOLDER: replace the href below with your real Google Form link
+          (in Google Forms: Send > link icon > copy). app.js shows a warning
+          while the placeholder is still here.
+        -->
+        <a id="feedback-form-link" class="btn btn--dark btn--block"
+           href="https://forms.gle/REPLACE_WITH_YOUR_GOOGLE_FORM_LINK"
+           target="_blank" rel="noopener">
+          Open feedback form
+        </a>
+        <p id="feedback-warning" class="notice notice--light" role="note" hidden>
+          Setup needed: the Google Form link has not been added yet.
+        </p>
+        <p class="small-print">
+          The form doesn't ask for your name. Please don't type personal details in your answers.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== BOTTOM TAB BAR (phones) ===================== -->
+  <!-- Easy to reach with a thumb. Tablets and computers use the top navigation instead.
+       "How the AI works" is reached from the Home and Scan pages and the top navigation. -->
+  <nav class="tabbar" aria-label="Main">
+      <button type="button" class="tab" data-goto="home"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg><span>Home</span></button>
+      <button type="button" class="tab" data-goto="styles"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><span>Styles</span></button>
+      <button type="button" class="tab tab--scan" data-goto="camera"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Scan</span></button>
+      <button type="button" class="tab" data-goto="services"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/></svg><span>Services</span></button>
+      <button type="button" class="tab" data-goto="feedback"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Feedback</span></button>
+  </nav>
+
+  <!-- ===================== LOADING OVERLAY ===================== -->
+  <!-- Shown while the AI model (about 3.6 MB) downloads and starts -->
+  <!-- "Try it on": the example haircut with the user's own face fitted on.
+       Drawn in the browser only; nothing is saved or sent anywhere. -->
+  <dialog id="tryon-dialog" class="tryon" aria-labelledby="tryon-title">
+    <div class="tryon__head">
+      <h2 id="tryon-title" class="tryon__title">Haircut</h2>
+      <button id="tryon-close" type="button" class="tryon__x" aria-label="Close">&times;</button>
+    </div>
+    <canvas id="tryon-canvas" class="tryon__canvas" width="360" height="360"
+            role="img" aria-label="Example haircut"></canvas>
+    <p id="tryon-msg" class="tryon__msg"></p>
+    <div class="tryon__actions">
+      <button id="tryon-toggle" type="button" class="btn btn--primary btn--block" hidden>Show original photo</button>
+      <button id="tryon-scan" type="button" class="btn btn--primary btn--block" hidden>Scan my face</button>
+    </div>
+  </dialog>
+
+  <div id="loading" class="loading" role="status" aria-live="polite" hidden>
+    <div class="loading__box">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="loading-text">Loading the face AI…</p>
+    </div>
+  </div>
+
+  <!-- ===================== ERROR MESSAGE BOX ===================== -->
+  <!-- app.js fills the title, message, and button for each kind of error -->
+  <div id="error-box" class="error-box" role="alert" hidden>
+    <div class="error-box__inner">
+      <p class="error-box__icon" aria-hidden="true">!</p>
+      <h2 id="error-title" class="error-box__title">Something went wrong</h2>
+      <p id="error-message" class="error-box__msg"></p>
+      <div class="error-box__actions">
+        <button id="error-action" type="button" class="btn btn--primary btn--block">Try again</button>
+        <button id="error-close" type="button" class="btn btn--ghost btn--block">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shown only if JavaScript is turned off -->
+  <noscript>
+    <p class="noscript">This app needs JavaScript turned on to work.</p>
+  </noscript>
+
+  <!--
+    type="module" lets app.js use `import` to load MediaPipe and our other files.
+    NOTE: modules only work from a web server (GitHub Pages or a local server),
+    NOT by double-clicking index.html. See README.md.
+  -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
