@@ -817,7 +817,7 @@ function renderExamples(shape, box) {
 function serviceRowHtml(key) {
   const s = SERVICES[key];
   if (!s) return "";
-  const price = s.price.startsWith("TO CONFIRM") ? "Price to confirm" : s.price;
+  const price = s.price.startsWith("TO CONFIRM") ? "Price to confirm" : `${s.price} <span class="service-sample">sample</span>`;
   return `
     <span class="service-name">${s.name}<span class="service-note">${s.note}</span></span>
     <span class="service-price">${price}</span>`;

@@ -34,13 +34,16 @@ export const SHOP = {
    ---------------------------------------------------------------- */
 const TO_CONFIRM = "TO CONFIRM WITH TLC BARBERSHOP";
 
+// SAMPLE PRICES ONLY (made up by the team for the class demo).
+// They are NOT TLC Barbershop's real prices: replace them with the
+// prices the owner gives, or set back to TO_CONFIRM.
 export const SERVICES = {
-  haircut:  { name: "Haircut",          note: "Cut and finish",                     price: TO_CONFIRM },
-  fade:     { name: "Taper / fade",     note: "Clean, blended sides",               price: TO_CONFIRM },
-  beard:    { name: "Beard trim",       note: "Shape and line the beard",           price: TO_CONFIRM },
-  shave:    { name: "Shave",            note: "Clean shave or neck line-up",        price: TO_CONFIRM },
-  wash:     { name: "Hair wash",        note: "Wash before or after the cut",       price: TO_CONFIRM },
-  styling:  { name: "Styling",          note: "Product and styling for the look",   price: TO_CONFIRM },
+  haircut:  { name: "Haircut",          note: "Cut and finish",                     price: "₱150" },
+  fade:     { name: "Taper / fade",     note: "Clean, blended sides",               price: "₱200" },
+  beard:    { name: "Beard trim",       note: "Shape and line the beard",           price: "₱100" },
+  shave:    { name: "Shave",            note: "Clean shave or neck line-up",        price: "₱120" },
+  wash:     { name: "Hair wash",        note: "Wash before or after the cut",       price: "₱50" },
+  styling:  { name: "Styling",          note: "Product and styling for the look",   price: "₱80" },
 };
 
 /* ---------- Face shapes and hairstyle advice ----------
