@@ -956,6 +956,3 @@ code {
 .tryon__canvas { display: block; width: calc(100% - 2 * var(--s-4)); margin: 0 auto; aspect-ratio: 1; border-radius: 14px; background: #e7ddcc; }
 .tryon__msg { margin: var(--s-3) var(--s-4) 0; font-size: 0.85rem; line-height: 1.45; color: var(--muted-on-light); }
 .tryon__actions { padding: var(--s-4); display: grid; gap: var(--s-2); }
-
-/* "sample" tag next to made-up demo prices */
-.service-sample { display: block; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-on-light); text-align: right; }
