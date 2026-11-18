@@ -2,7 +2,7 @@
 
 A free web app that looks at your face through your phone camera, works out your **face shape** (oval, round, square, rectangle, heart or diamond), and suggests **haircuts that suit it**. You can also tap a haircut to see it on your own face.
 
-Built for **TLC Barbershop**, 531 Jose Abad Santos St., Salapungan, Angeles City, Pampanga 2009, as the final project of group 3 in PTF50 at Angeles University Foundation.
+Built for **TLC Barbershop**, 531 Jose Abad Santos St., Salapungan, Angeles City, Pampanga 2009, as the final project of group 2 in PTF50 at Angeles University Foundation.
 
 > It gives an **estimate** to help start the conversation with a barber. It is not a professional assessment.
 
@@ -100,7 +100,7 @@ The example haircut photos in `assets/examples/` come from a student sample set 
 
 ## Credits
 
-- **Group 3, PTF50:** Aquino, Alvin Gino · Cunanan, Lovely Irene · Mercado, Timothy Sean · Pasion, Val Andrei
+- **Group 2, PTF50:** Aquino, Alvin Gino · Cunanan, Lovely Irene · Mercado, Timothy Sean · Pasion, Val Andrei
 - **Instructor:** Dr. James A. Esquivel
 - **Angeles University Foundation**
 - Face landmark detection: [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) by Google (Apache 2.0 licence)
